@@ -1,0 +1,29 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "donations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masjidId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "donors",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masjidId", "order": "ASCENDING" },
+        { "fieldPath": "lastName", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "zakat_funds",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masjidId", "order": "ASCENDING" },
+        { "fieldPath": "fiscalYear", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

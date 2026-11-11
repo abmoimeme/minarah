@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Masjid document — readable by any authenticated member of that masjid
+    match /masjids/{masjidId} {
+      allow read: if isAuthenticated() && isMasjidMember(masjidId);
+      allow write: if isAuthenticated() && isMasjidAdmin(masjidId);
+
+      // All sub-collections scoped to the same masjid
+      match /{collection}/{docId} {
+        allow read: if isAuthenticated() && isMasjidMember(masjidId);
+        allow write: if isAuthenticated() && isMasjidAdmin(masjidId);
+      }
+    }
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isMasjidMember(masjidId) {
+      return request.auth.token.masjidId == masjidId;
+    }
+
+    function isMasjidAdmin(masjidId) {
+      return isMasjidMember(masjidId) && request.auth.token.role == 'admin';
+    }
+  }
+}

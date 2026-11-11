@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "live": {
+      "$masjidId": {
+        ".read": "auth != null && auth.token.masjidId === $masjidId",
+        ".write": "auth != null && auth.token.masjidId === $masjidId && auth.token.role === 'admin'"
+      }
+    }
+  }
+}
