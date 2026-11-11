@@ -1,0 +1,1331 @@
+<title>Minarah Admin</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+/*
+  Layout: fixed left sidebar + scrollable main, collapsing to bottom nav on mobile
+  Design: deep forest green brand, warm off-white surfaces, subtle gold accent
+*/
+
+/* ── Tokens ─────────────────────────────────────────────────── */
+:root {
+  /* Brand */
+  --green-900: #0d2b1e;
+  --green-800: #163d2a;
+  --green-700: #1e5438;
+  --green-600: #256644;
+  --green-400: #3a9e6a;
+  --green-200: #a8d9c0;
+  --green-100: #d4edd e;
+  --gold:       #c8973a;
+  --gold-lt:    #f0c97a;
+
+  /* Neutrals — warm-biased */
+  --bg:         #f7f5f1;
+  --surface:    #ffffff;
+  --surface-2:  #f0ece5;
+  --border:     #e2ddd5;
+  --muted:      #9b9389;
+  --fg:         #1a1714;
+  --fg-2:       #4a4540;
+
+  /* Semantic */
+  --ok:         #2d8a56;
+  --warn:       #c8793a;
+  --danger:     #c83a3a;
+  --info:       #3a7ac8;
+
+  /* Sidebar */
+  --sidebar-bg: var(--green-900);
+  --sidebar-fg: #c8e0d4;
+  --sidebar-active-bg: var(--green-700);
+  --sidebar-active-fg: #ffffff;
+  --sidebar-muted: #6a9880;
+
+  /* Type */
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Sizes */
+  --sidebar-w: 220px;
+  --radius: 10px;
+  --radius-sm: 6px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:        #0f1a13;
+    --surface:   #172217;
+    --surface-2: #1f2e22;
+    --border:    #2a3d2e;
+    --muted:     #6a876e;
+    --fg:        #e8f0ea;
+    --fg-2:      #a8bfac;
+
+    --sidebar-bg: #0a1410;
+    --sidebar-fg: #9abfa8;
+    --sidebar-active-bg: #1e5438;
+    --sidebar-active-fg: #e8f0ea;
+    --sidebar-muted: #4a7060;
+
+    --ok:    #3aa86a;
+    --warn:  #d4893a;
+    --danger:#d44a4a;
+    --info:  #4a8ad4;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:        #0f1a13;
+  --surface:   #172217;
+  --surface-2: #1f2e22;
+  --border:    #2a3d2e;
+  --muted:     #6a876e;
+  --fg:        #e8f0ea;
+  --fg-2:      #a8bfac;
+  --sidebar-bg: #0a1410;
+  --sidebar-fg: #9abfa8;
+  --sidebar-active-bg: #1e5438;
+  --sidebar-active-fg: #e8f0ea;
+  --sidebar-muted: #4a7060;
+  --ok:    #3aa86a;
+  --warn:  #d4893a;
+  --danger:#d44a4a;
+  --info:  #4a8ad4;
+  color-scheme: dark;
+}
+
+/* ── Reset / Base ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--fg);
+  display: flex;
+  overflow: hidden;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+a { color: inherit; text-decoration: none; }
+input, select { font-family: inherit; }
+svg { display: block; flex-shrink: 0; }
+
+/* ── Layout Shell ───────────────────────────────────────────── */
+#sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  padding-bottom: 24px;
+}
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+#topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px max(16px, env(safe-area-inset-right, 0px)) 14px max(16px, env(safe-area-inset-left, 0px));
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+#content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px));
+}
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.sidebar-logo {
+  padding: 20px 18px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--green-600);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.logo-mark svg { color: #fff; }
+.logo-name {
+  font-weight: 700;
+  font-size: 16px;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+.logo-badge {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--gold-lt);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+.sidebar-masjid {
+  margin: 0 12px 16px;
+  background: var(--green-800);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+.sidebar-masjid-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+}
+.sidebar-masjid-plan {
+  font-size: 10px;
+  color: var(--gold-lt);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sidebar-masjid-plan::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  flex-shrink: 0;
+}
+.sidebar-nav-label {
+  padding: 10px 18px 4px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--sidebar-muted);
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 18px;
+  border-radius: 0;
+  color: var(--sidebar-fg);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+.nav-item.active {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-active-fg);
+  font-weight: 600;
+}
+.nav-item .badge {
+  margin-left: auto;
+  background: var(--gold);
+  color: #000;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-variant-numeric: tabular-nums;
+}
+.sidebar-bottom {
+  margin-top: auto;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 12px;
+}
+
+/* ── Topbar ─────────────────────────────────────────────────── */
+.topbar-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.3px;
+}
+.topbar-subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.prayer-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 10px 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.prayer-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary {
+  background: var(--green-700);
+  color: #fff;
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-ghost {
+  background: var(--surface-2);
+  color: var(--fg-2);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: var(--border); }
+
+/* ── KPI Tiles ──────────────────────────────────────────────── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.kpi-card.c-ok::before    { background: var(--ok); }
+.kpi-card.c-gold::before  { background: var(--gold); }
+.kpi-card.c-info::before  { background: var(--info); }
+.kpi-card.c-warn::before  { background: var(--warn); }
+.kpi-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.kpi-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.trend-up   { color: var(--ok); }
+.trend-down { color: var(--danger); }
+
+/* ── Sections ───────────────────────────────────────────────── */
+.section-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--fg);
+}
+.card-action {
+  font-size: 12px;
+  color: var(--green-400);
+  font-weight: 600;
+  cursor: pointer;
+}
+.card-body { padding: 16px 20px; }
+
+/* ── Chart: Donations Sparkline ─────────────────────────────── */
+.sparkline-chart {
+  position: relative;
+  height: 120px;
+  margin-bottom: 8px;
+}
+.chart-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  margin-top: 4px;
+}
+
+/* ── Prayer Times ───────────────────────────────────────────── */
+.prayer-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.prayer-row:last-child { border-bottom: none; }
+.prayer-name {
+  font-weight: 600;
+  font-size: 13px;
+  width: 72px;
+  color: var(--fg);
+}
+.prayer-arabic {
+  font-size: 11px;
+  color: var(--muted);
+  flex: 1;
+  text-align: right;
+  direction: rtl;
+}
+.prayer-time {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg);
+  width: 48px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.prayer-iqama {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  width: 42px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.prayer-row.current .prayer-name { color: var(--ok); }
+.prayer-row.current .prayer-time { color: var(--ok); }
+.prayer-row.current {
+  background: rgba(45, 138, 86, 0.06);
+  margin: 0 -20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  border-radius: var(--radius-sm);
+  border-bottom: none;
+}
+
+/* ── Donors Table ───────────────────────────────────────────── */
+.donors-table { width: 100%; border-collapse: collapse; }
+.donors-table th {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 0 0 10px;
+  border-bottom: 1px solid var(--border);
+}
+.donors-table td {
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--fg);
+  vertical-align: middle;
+}
+.donors-table tr:last-child td { border-bottom: none; }
+.donor-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.donor-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.donor-name { font-weight: 600; font-size: 13px; }
+.donor-email { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.amount-cell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.freq-chip {
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 2px 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.freq-monthly  { background: rgba(58,158,106,0.12); color: var(--ok); }
+.freq-weekly   { background: rgba(58,122,200,0.12); color: var(--info); }
+.freq-one-time { background: rgba(155,147,137,0.15); color: var(--muted); }
+
+/* ── Campaign Card ──────────────────────────────────────────── */
+.campaign-item {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.campaign-item:last-child { border-bottom: none; }
+.campaign-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.campaign-name { font-weight: 600; font-size: 13px; }
+.campaign-pct {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ok);
+  font-variant-numeric: tabular-nums;
+}
+.progress-bar {
+  height: 5px;
+  background: var(--surface-2);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: var(--green-600);
+  transition: width 1s ease;
+}
+.progress-fill.gold { background: var(--gold); }
+.campaign-amounts {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Zakat Panel ────────────────────────────────────────────── */
+.zakat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.zakat-stat {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+.zakat-stat-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.zakat-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.zakat-stat-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.distrib-bar {
+  margin-top: 14px;
+}
+.distrib-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--fg-2);
+  margin-bottom: 4px;
+}
+.distrib-track {
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.distrib-fill {
+  height: 100%;
+  border-radius: 10px;
+}
+
+/* ── Bottom row ─────────────────────────────────────────────── */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* ── Activity Feed ──────────────────────────────────────────── */
+.activity-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.activity-item:last-child { border-bottom: none; }
+.activity-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 14px;
+}
+.activity-text { flex: 1; min-width: 0; }
+.activity-line { font-size: 12px; color: var(--fg); line-height: 1.4; }
+.activity-line strong { font-weight: 600; }
+.activity-time { font-size: 10px; color: var(--muted); margin-top: 2px; font-variant-numeric: tabular-nums; }
+
+/* ── School Panel ───────────────────────────────────────────── */
+.school-stat-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.school-stat {
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  text-align: center;
+}
+.school-stat-n {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.school-stat-l {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+.class-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.class-row:last-child { border-bottom: none; }
+.class-name { font-weight: 600; flex: 1; }
+.class-count { color: var(--muted); font-variant-numeric: tabular-nums; }
+.class-attend {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ok);
+  background: rgba(45,138,86,0.1);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* ── View switching ─────────────────────────────────────────── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 800px) {
+  #sidebar { display: none; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .section-row { grid-template-columns: 1fr; }
+  .zakat-row { grid-template-columns: 1fr; }
+  .bottom-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 500px) {
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M9 1.5L2 5v8l7 3.5 7-3.5V5L9 1.5z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+        <circle cx="9" cy="9" r="2" fill="white"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-name">Minarah</div>
+      <div class="logo-badge">Admin Dashboard</div>
+    </div>
+  </div>
+
+  <div class="sidebar-masjid">
+    <div class="sidebar-masjid-name">Islamic Center of Laveen</div>
+    <div class="sidebar-masjid-plan">Academy Plan</div>
+  </div>
+
+  <div class="sidebar-nav-label">Main</div>
+  <button class="nav-item active" onclick="switchView('dashboard', this)">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><path d="M1 1h6v6H1V1zm7 0h6v6H8V1zM1 8h6v6H1V8zm7 0h6v6H8V8z" opacity=".9"/></svg>
+    Dashboard
+  </button>
+  <button class="nav-item" onclick="switchView('donors', this)">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><path d="M7.5 7a3 3 0 100-6 3 3 0 000 6zM2 13.5a5.5 5.5 0 0111 0H2z"/></svg>
+    Donors
+    <span class="badge">48</span>
+  </button>
+  <button class="nav-item" onclick="switchView('donations', this)">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><path d="M7.5 1a1 1 0 011 1v1.05A5.5 5.5 0 0113 8.5h.5a1 1 0 010 2H13a5.5 5.5 0 01-10 0h-.5a1 1 0 010-2H3a5.5 5.5 0 014.5-5.45V2a1 1 0 011-1z"/></svg>
+    Donations
+  </button>
+  <button class="nav-item" onclick="switchView('campaigns', this)">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><path d="M1 3h13v2H1V3zm2 4h9v2H3V7zm2 4h5v2H5v-2z"/></svg>
+    Campaigns
+  </button>
+  <button class="nav-item" onclick="switchView('zakat', this)">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><path d="M7.5 1L1 4.5v6L7.5 14 14 10.5v-6L7.5 1zM7.5 10a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg>
+    Zakat
+    <span class="badge">New</span>
+  </button>
+
+  <div class="sidebar-nav-label">Operations</div>
+  <button class="nav-item" onclick="switchView('prayer', this)">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><path d="M7.5 1a6.5 6.5 0 100 13A6.5 6.5 0 007.5 1zM8 7.5V4H7v4l3 1.5.5-.87L8 7.5z"/></svg>
+    Prayer Times
+  </button>
+  <button class="nav-item" onclick="switchView('school', this)">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><path d="M7.5 1L1 4l6.5 3L14 4 7.5 1zM1 6v5l6.5 3 6.5-3V6L7.5 9 1 6z"/></svg>
+    School & Maktab
+  </button>
+  <button class="nav-item">
+    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><path d="M1 3h13v2H1V3zm0 4h13v2H1V7zm0 4h9v2H1v-2z"/></svg>
+    TV / Kiosk
+  </button>
+
+  <div class="sidebar-bottom">
+    <button class="nav-item">
+      <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"><path d="M7.5 1a6.5 6.5 0 100 13A6.5 6.5 0 007.5 1zm0 11a4.5 4.5 0 110-9 4.5 4.5 0 010 9zm0-7a2.5 2.5 0 100 5 2.5 2.5 0 000-5z"/></svg>
+      Settings
+    </button>
+  </div>
+</div>
+
+<!-- Main area -->
+<div id="main">
+  <div id="topbar">
+    <div class="topbar-title" id="topbar-title">Dashboard</div>
+    <div class="topbar-subtitle">
+      <div class="prayer-badge">
+        <div class="prayer-dot"></div>
+        <span>Next: Dhuhr · 1:12 PM</span>
+      </div>
+      <button class="btn btn-primary" style="font-size:12px; padding: 6px 12px;">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="currentColor"><path d="M6.5 1v11M1 6.5h11"/></svg>
+        New Donation
+      </button>
+    </div>
+  </div>
+
+  <div id="content">
+
+    <!-- ═══ DASHBOARD VIEW ══════════════════════════════════ -->
+    <div class="view active" id="view-dashboard">
+
+      <div class="kpi-row">
+        <div class="kpi-card c-ok">
+          <div class="kpi-label">Total Raised · Nov</div>
+          <div class="kpi-value">$18,340</div>
+          <div class="kpi-sub"><span class="trend-up">↑ 12%</span> vs last month</div>
+        </div>
+        <div class="kpi-card c-gold">
+          <div class="kpi-label">Active Donors</div>
+          <div class="kpi-value">48</div>
+          <div class="kpi-sub"><span class="trend-up">+6</span> this month · 2 of 50 left (Starter)</div>
+        </div>
+        <div class="kpi-card c-info">
+          <div class="kpi-label">Zakat Collected · 1446H</div>
+          <div class="kpi-value">$9,250</div>
+          <div class="kpi-sub"><span style="color:var(--warn)">42%</span> distributed</div>
+        </div>
+        <div class="kpi-card c-warn">
+          <div class="kpi-label">School Enrollment</div>
+          <div class="kpi-value">63</div>
+          <div class="kpi-sub">3 classes · 94% attendance</div>
+        </div>
+      </div>
+
+      <div class="section-row">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Donation Trend — Last 8 Weeks</div>
+            <span class="card-action">View all →</span>
+          </div>
+          <div class="card-body">
+            <div class="sparkline-chart">
+              <svg id="spark" width="100%" height="120" viewBox="0 0 400 120" preserveAspectRatio="none"></svg>
+            </div>
+            <div class="chart-labels" id="spark-labels"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Prayer Times · Today</div>
+            <span class="card-action" onclick="switchView('prayer', document.querySelector('[onclick*=prayer]'))">Edit →</span>
+          </div>
+          <div class="card-body" style="padding: 8px 20px;">
+            <div class="prayer-row">
+              <div class="prayer-name">Fajr</div>
+              <div class="prayer-arabic">الفجر</div>
+              <div class="prayer-time">5:48</div>
+              <div class="prayer-iqama">+10m</div>
+            </div>
+            <div class="prayer-row">
+              <div class="prayer-name">Dhuhr</div>
+              <div class="prayer-arabic">الظهر</div>
+              <div class="prayer-time">12:58</div>
+              <div class="prayer-iqama">+14m</div>
+            </div>
+            <div class="prayer-row current">
+              <div class="prayer-name">Asr</div>
+              <div class="prayer-arabic">العصر</div>
+              <div class="prayer-time">3:40</div>
+              <div class="prayer-iqama">+10m</div>
+            </div>
+            <div class="prayer-row">
+              <div class="prayer-name">Maghrib</div>
+              <div class="prayer-arabic">المغرب</div>
+              <div class="prayer-time">5:23</div>
+              <div class="prayer-iqama">+5m</div>
+            </div>
+            <div class="prayer-row">
+              <div class="prayer-name">Isha</div>
+              <div class="prayer-arabic">العشاء</div>
+              <div class="prayer-time">7:00</div>
+              <div class="prayer-iqama">+15m</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-row">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Recent Donors</div>
+            <span class="card-action" onclick="switchView('donors', document.querySelector('[onclick*=donors]'))">All donors →</span>
+          </div>
+          <div class="card-body">
+            <table class="donors-table">
+              <thead><tr>
+                <th>Donor</th>
+                <th>Amount</th>
+                <th>Frequency</th>
+                <th>Date</th>
+              </tr></thead>
+              <tbody id="donors-preview"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Campaigns</div>
+            <span class="card-action">Manage →</span>
+          </div>
+          <div class="card-body" style="padding: 8px 20px;">
+            <div class="campaign-item">
+              <div class="campaign-top">
+                <div class="campaign-name">Ramadan Fund 1446H</div>
+                <div class="campaign-pct">78%</div>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:78%"></div></div>
+              <div class="campaign-amounts"><span>$15,600 raised</span><span>Goal: $20,000</span></div>
+            </div>
+            <div class="campaign-item">
+              <div class="campaign-top">
+                <div class="campaign-name">Roof Repair 2026</div>
+                <div class="campaign-pct" style="color:var(--gold)">43%</div>
+              </div>
+              <div class="progress-bar"><div class="progress-fill gold" style="width:43%"></div></div>
+              <div class="campaign-amounts"><span>$8,600 raised</span><span>Goal: $20,000</span></div>
+            </div>
+            <div class="campaign-item">
+              <div class="campaign-top">
+                <div class="campaign-name">New Projector</div>
+                <div class="campaign-pct">91%</div>
+              </div>
+              <div class="progress-bar"><div class="progress-fill" style="width:91%"></div></div>
+              <div class="campaign-amounts"><span>$2,730 raised</span><span>Goal: $3,000</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-row">
+        <div class="card">
+          <div class="card-head"><div class="card-title">Recent Activity</div></div>
+          <div class="card-body" style="padding: 4px 20px;">
+            <div class="activity-item">
+              <div class="activity-icon" style="background:rgba(45,138,86,0.12)">💚</div>
+              <div class="activity-text">
+                <div class="activity-line"><strong>Fatima Al-Hassan</strong> donated $150 — Ramadan Fund</div>
+                <div class="activity-time">Today · 2:34 PM</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon" style="background:rgba(200,151,58,0.12)">🕌</div>
+              <div class="activity-text">
+                <div class="activity-line">Jumu'ah reminder sent to <strong>48 subscribers</strong></div>
+                <div class="activity-time">Today · 11:00 AM</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon" style="background:rgba(58,122,200,0.12)">📚</div>
+              <div class="activity-text">
+                <div class="activity-line"><strong>Musa Al-Farsi</strong> enrolled in Quran Basics class</div>
+                <div class="activity-time">Yesterday · 4:12 PM</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon" style="background:rgba(45,138,86,0.12)">💚</div>
+              <div class="activity-text">
+                <div class="activity-line"><strong>Ibrahim Diallo</strong> set up $200/month recurring</div>
+                <div class="activity-time">Yesterday · 1:08 PM</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon" style="background:rgba(200,121,58,0.12)">📄</div>
+              <div class="activity-text">
+                <div class="activity-line">Zakat Shariah report generated for 1446H — Fitr</div>
+                <div class="activity-time">Nov 8 · 9:00 AM</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><div class="card-title">Zakat Summary · 1446H</div></div>
+          <div class="card-body">
+            <div class="zakat-row" style="margin-bottom:0">
+              <div class="zakat-stat">
+                <div class="zakat-stat-label">Collected</div>
+                <div class="zakat-stat-value">$9,250</div>
+                <div class="zakat-stat-sub">Fitr + Maal</div>
+              </div>
+              <div class="zakat-stat">
+                <div class="zakat-stat-label">Distributed</div>
+                <div class="zakat-stat-value">$3,900</div>
+                <div class="zakat-stat-sub">42% · 5 families</div>
+              </div>
+            </div>
+            <div style="padding-top:14px;">
+              <div class="distrib-bar">
+                <div class="distrib-label"><span>Faqir / Miskin</span><span>$2,100</span></div>
+                <div class="distrib-track"><div class="distrib-fill" style="width:54%; background:var(--green-600)"></div></div>
+              </div>
+              <div class="distrib-bar">
+                <div class="distrib-label"><span>Gharim (Debt Relief)</span><span>$1,200</span></div>
+                <div class="distrib-track"><div class="distrib-fill" style="width:31%; background:var(--gold)"></div></div>
+              </div>
+              <div class="distrib-bar">
+                <div class="distrib-label"><span>Amil (Admin)</span><span>$600</span></div>
+                <div class="distrib-track"><div class="distrib-fill" style="width:15%; background:var(--info)"></div></div>
+              </div>
+              <div style="margin-top:12px">
+                <button class="btn btn-ghost" style="width:100%; justify-content:center; font-size:12px;">
+                  Download Shariah Report (PDF)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /dashboard -->
+
+    <!-- ═══ DONORS VIEW ══════════════════════════════════════ -->
+    <div class="view" id="view-donors">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">All Donors (48 / 50 Starter limit)</div>
+          <button class="btn btn-primary" style="font-size:12px; padding:6px 12px;">+ Add Donor</button>
+        </div>
+        <div class="card-body">
+          <table class="donors-table">
+            <thead><tr>
+              <th>Donor</th><th>Total Given</th><th>Frequency</th><th>Last Gift</th><th>Status</th>
+            </tr></thead>
+            <tbody id="donors-full"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ZAKAT VIEW ═══════════════════════════════════════ -->
+    <div class="view" id="view-zakat">
+      <div class="kpi-row">
+        <div class="kpi-card c-ok">
+          <div class="kpi-label">Total Collected · 1446H</div>
+          <div class="kpi-value">$9,250</div>
+          <div class="kpi-sub">Zakat al-Fitr + Zakat al-Maal</div>
+        </div>
+        <div class="kpi-card c-gold">
+          <div class="kpi-label">Distributed</div>
+          <div class="kpi-value">$3,900</div>
+          <div class="kpi-sub">42% · 5 recipient families</div>
+        </div>
+        <div class="kpi-card c-info">
+          <div class="kpi-label">Nisab (Silver)</div>
+          <div class="kpi-value">$618</div>
+          <div class="kpi-sub">595g silver · updated daily</div>
+        </div>
+        <div class="kpi-card c-warn">
+          <div class="kpi-label">Remaining</div>
+          <div class="kpi-value">$5,350</div>
+          <div class="kpi-sub">Pending distribution</div>
+        </div>
+      </div>
+      <div class="section-row">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Zakat Funds — 1446H</div>
+            <button class="btn btn-primary" style="font-size:12px; padding:6px 12px;">+ Record Collection</button>
+          </div>
+          <div class="card-body">
+            <table class="donors-table">
+              <thead><tr>
+                <th>Type</th><th>Collected</th><th>Distributed</th><th>Balance</th><th>Report</th>
+              </tr></thead>
+              <tbody>
+                <tr>
+                  <td><strong>Zakat al-Fitr</strong></td>
+                  <td class="amount-cell">$3,250</td>
+                  <td class="amount-cell">$3,250</td>
+                  <td class="amount-cell" style="color:var(--ok)">$0 ✓</td>
+                  <td><button class="btn btn-ghost" style="font-size:11px; padding:3px 8px;">PDF</button></td>
+                </tr>
+                <tr>
+                  <td><strong>Zakat al-Maal</strong></td>
+                  <td class="amount-cell">$6,000</td>
+                  <td class="amount-cell">$650</td>
+                  <td class="amount-cell" style="color:var(--warn)">$5,350</td>
+                  <td><button class="btn btn-ghost" style="font-size:11px; padding:3px 8px;">PDF</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Zakat Calculator</div></div>
+          <div class="card-body">
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div>
+                <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">TOTAL ASSETS (USD)</label>
+                <input id="zakat-assets" type="number" value="50000" oninput="calcZakat()"
+                  style="width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg); font-size:14px; font-weight:600; font-family:var(--font-mono);">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:600; color:var(--muted); display:block; margin-bottom:4px;">TOTAL LIABILITIES (USD)</label>
+                <input id="zakat-liab" type="number" value="10000" oninput="calcZakat()"
+                  style="width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg); font-size:14px; font-weight:600; font-family:var(--font-mono);">
+              </div>
+              <div style="background:var(--surface-2); border-radius:var(--radius-sm); padding:16px; text-align:center;">
+                <div style="font-size:11px; color:var(--muted); font-weight:600; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:6px;">Zakat Due (2.5%)</div>
+                <div id="zakat-result" style="font-size:28px; font-weight:700; color:var(--ok); font-variant-numeric:tabular-nums;">$1,000.00</div>
+                <div style="font-size:11px; color:var(--muted); margin-top:4px;">Zakatable wealth: <span id="zakat-wealth">$40,000</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PRAYER TIMES VIEW ════════════════════════════════ -->
+    <div class="view" id="view-prayer">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Prayer Times — Islamic Center of Laveen</div>
+          <button class="btn btn-primary" style="font-size:12px; padding:6px 12px;">Save Changes</button>
+        </div>
+        <div class="card-body">
+          <table class="donors-table">
+            <thead><tr><th>Prayer</th><th>Arabic</th><th>Adhan Time</th><th>Iqama</th><th>Push to TV / Kiosk</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>Fajr</strong></td><td style="direction:rtl">الفجر</td>
+                <td><input type="time" value="05:48" style="font-family:var(--font-mono); padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg);"></td>
+                <td><input type="time" value="05:58" style="font-family:var(--font-mono); padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg);"></td>
+                <td><span style="font-size:11px; color:var(--ok);">✓ Live</span></td>
+              </tr>
+              <tr>
+                <td><strong>Dhuhr</strong></td><td style="direction:rtl">الظهر</td>
+                <td><input type="time" value="12:58" style="font-family:var(--font-mono); padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg);"></td>
+                <td><input type="time" value="13:12" style="font-family:var(--font-mono); padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg);"></td>
+                <td><span style="font-size:11px; color:var(--ok);">✓ Live</span></td>
+              </tr>
+              <tr>
+                <td><strong>Asr</strong></td><td style="direction:rtl">العصر</td>
+                <td><input type="time" value="15:40" style="font-family:var(--font-mono); padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg);"></td>
+                <td><input type="time" value="15:50" style="font-family:var(--font-mono); padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg);"></td>
+                <td><span style="font-size:11px; color:var(--ok);">✓ Live</span></td>
+              </tr>
+              <tr>
+                <td><strong>Maghrib</strong></td><td style="direction:rtl">المغرب</td>
+                <td><input type="time" value="17:23" style="font-family:var(--font-mono); padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg);"></td>
+                <td><input type="time" value="17:28" style="font-family:var(--font-mono); padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg);"></td>
+                <td><span style="font-size:11px; color:var(--ok);">✓ Live</span></td>
+              </tr>
+              <tr>
+                <td><strong>Isha</strong></td><td style="direction:rtl">العشاء</td>
+                <td><input type="time" value="19:00" style="font-family:var(--font-mono); padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg);"></td>
+                <td><input type="time" value="19:15" style="font-family:var(--font-mono); padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg);"></td>
+                <td><span style="font-size:11px; color:var(--ok);">✓ Live</span></td>
+              </tr>
+              <tr>
+                <td><strong>Jumu'ah</strong></td><td style="direction:rtl">الجمعة</td>
+                <td><input type="time" value="13:00" style="font-family:var(--font-mono); padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg);"></td>
+                <td><input type="time" value="13:15" style="font-family:var(--font-mono); padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-sm); background:var(--surface-2); color:var(--fg);"></td>
+                <td><span style="font-size:11px; color:var(--ok);">✓ Live</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="margin-top:16px; padding:12px; background:rgba(45,138,86,0.08); border-radius:var(--radius-sm); font-size:12px; color:var(--fg-2);">
+            🔴 Changes saved here push instantly to Firebase Realtime Database → TV Display and Prayer Kiosk update live.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SCHOOL VIEW ══════════════════════════════════════ -->
+    <div class="view" id="view-school">
+      <div class="kpi-row">
+        <div class="kpi-card c-ok">
+          <div class="kpi-label">Total Students</div>
+          <div class="kpi-value">63</div>
+          <div class="kpi-sub">Across 3 active classes</div>
+        </div>
+        <div class="kpi-card c-gold">
+          <div class="kpi-label">Avg. Attendance</div>
+          <div class="kpi-value">94%</div>
+          <div class="kpi-sub">↑ 3% vs last semester</div>
+        </div>
+        <div class="kpi-card c-info">
+          <div class="kpi-label">Teachers</div>
+          <div class="kpi-value">4</div>
+          <div class="kpi-sub">3 Quran · 1 Arabic</div>
+        </div>
+        <div class="kpi-card c-warn">
+          <div class="kpi-label">Fees Collected</div>
+          <div class="kpi-value">$3,780</div>
+          <div class="kpi-sub">Nov semester · 87% paid</div>
+        </div>
+      </div>
+      <div class="bottom-row">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Classes</div>
+            <button class="btn btn-primary" style="font-size:12px; padding:6px 12px;">+ New Class</button>
+          </div>
+          <div class="card-body" style="padding:8px 20px;">
+            <div class="class-row">
+              <div class="class-name">Quran Basics (Ages 6–9)</div>
+              <div class="class-count">24 students</div>
+              <div class="class-attend">96%</div>
+            </div>
+            <div class="class-row">
+              <div class="class-name">Quran Intermediate (Ages 10–13)</div>
+              <div class="class-count">21 students</div>
+              <div class="class-attend">93%</div>
+            </div>
+            <div class="class-row">
+              <div class="class-name">Arabic Language (Adults)</div>
+              <div class="class-count">18 students</div>
+              <div class="class-attend">91%</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">Recent Enrollments</div></div>
+          <div class="card-body" style="padding:4px 20px;">
+            <div class="activity-item">
+              <div class="activity-icon" style="background:rgba(58,122,200,0.12)">📚</div>
+              <div class="activity-text">
+                <div class="activity-line"><strong>Musa Al-Farsi</strong> — Quran Basics</div>
+                <div class="activity-time">Nov 10 · Guardian: Ahmed Al-Farsi</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon" style="background:rgba(58,122,200,0.12)">📚</div>
+              <div class="activity-text">
+                <div class="activity-line"><strong>Khadija Rahman</strong> — Quran Intermediate</div>
+                <div class="activity-time">Nov 8 · Guardian: Fatima Rahman</div>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon" style="background:rgba(58,122,200,0.12)">📚</div>
+              <div class="activity-text">
+                <div class="activity-line"><strong>Bilal Hassan</strong> — Arabic Language</div>
+                <div class="activity-time">Nov 5 · Self-enrolled (Adult)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PLACEHOLDER VIEWS ════════════════════════════════ -->
+    <div class="view" id="view-donations">
+      <div class="card"><div class="card-body" style="text-align:center; padding:60px 20px; color:var(--muted);">
+        <div style="font-size:40px; margin-bottom:12px;">💚</div>
+        <div style="font-size:16px; font-weight:600; color:var(--fg); margin-bottom:6px;">Donations View</div>
+        <div style="font-size:13px;">Full transaction history, receipts, and Stripe reconciliation — coming in v0.2</div>
+      </div></div>
+    </div>
+    <div class="view" id="view-campaigns">
+      <div class="card"><div class="card-body" style="text-align:center; padding:60px 20px; color:var(--muted);">
+        <div style="font-size:40px; margin-bottom:12px;">🎯</div>
+        <div style="font-size:16px; font-weight:600; color:var(--fg); margin-bottom:6px;">Campaigns</div>
+        <div style="font-size:13px;">Create and manage fundraising campaigns with goals, timelines, and donor attribution — coming in v0.2</div>
+      </div></div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ── Sample data ───────────────────────────────────────────
+const DONORS = [
+  { name: 'Ibrahim Diallo',    email: 'i.diallo@email.com',    color:'#256644', total: '$2,400', freq: 'monthly',  last: 'Nov 1' },
+  { name: 'Fatima Al-Hassan',  email: 'f.hassan@email.com',    color:'#c8973a', total: '$1,850', freq: 'monthly',  last: 'Nov 11' },
+  { name: 'Ahmed Yusuf',       email: 'a.yusuf@email.com',     color:'#3a7ac8', total: '$900',   freq: 'weekly',   last: 'Nov 9' },
+  { name: 'Maryam Khan',       email: 'm.khan@email.com',      color:'#8a56a8', total: '$500',   freq: 'one-time', last: 'Oct 28' },
+  { name: 'Omar Al-Rashidi',   email: 'o.rashidi@email.com',   color:'#c83a56', total: '$1,200', freq: 'monthly',  last: 'Nov 1' },
+  { name: 'Zaynab Coulibaly',  email: 'z.coulibaly@email.com', color:'#3a9e6a', total: '$750',   freq: 'weekly',   last: 'Nov 8' },
+];
+
+function initials(name) {
+  return name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+}
+function freqClass(f) {
+  return f === 'monthly' ? 'freq-monthly' : f === 'weekly' ? 'freq-weekly' : 'freq-one-time';
+}
+function donorRow(d) {
+  return `<tr>
+    <td><div class="donor-cell">
+      <div class="donor-avatar" style="background:${d.color}">${initials(d.name)}</div>
+      <div><div class="donor-name">${d.name}</div><div class="donor-email">${d.email}</div></div>
+    </div></td>
+    <td class="amount-cell">${d.total}</td>
+    <td><span class="freq-chip ${freqClass(d.freq)}">${d.freq}</span></td>
+    <td style="color:var(--muted);font-size:12px">${d.last}</td>
+  </tr>`;
+}
+
+document.getElementById('donors-preview').innerHTML = DONORS.slice(0,4).map(donorRow).join('');
+document.getElementById('donors-full').innerHTML = DONORS.map(d => `<tr>
+  <td><div class="donor-cell">
+    <div class="donor-avatar" style="background:${d.color}">${initials(d.name)}</div>
+    <div><div class="donor-name">${d.name}</div><div class="donor-email">${d.email}</div></div>
+  </div></td>
+  <td class="amount-cell">${d.total}</td>
+  <td><span class="freq-chip ${freqClass(d.freq)}">${d.freq}</span></td>
+  <td style="color:var(--muted);font-size:12px">${d.last}</td>
+  <td><span style="font-size:11px; color:var(--ok)">Active</span></td>
+</tr>`).join('');
+
+// ── Sparkline chart ───────────────────────────────────────
+const weeks = ['Sep 23','Sep 30','Oct 7','Oct 14','Oct 21','Oct 28','Nov 4','Nov 11'];
+const vals =  [3200, 2800, 4100, 3600, 4800, 5100, 4400, 5900];
+const W = 400, H = 120, PAD = 10;
+const mn = Math.min(...vals) * 0.9, mx = Math.max(...vals) * 1.05;
+const toX = i => PAD + i * (W - PAD*2) / (vals.length - 1);
+const toY = v => H - PAD - ((v - mn) / (mx - mn)) * (H - PAD*2);
+const pts = vals.map((v,i) => `${toX(i)},${toY(v)}`).join(' ');
+const area = `M${toX(0)},${toY(vals[0])} ` + vals.map((v,i) => `L${toX(i)},${toY(v)}`).join(' ') + ` L${toX(vals.length-1)},${H} L${toX(0)},${H} Z`;
+
+const svg = document.getElementById('spark');
+const defs = `<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#256644" stop-opacity="0.25"/><stop offset="100%" stop-color="#256644" stop-opacity="0.02"/></linearGradient></defs>`;
+// Faint grid lines
+let grid = '';
+for (let i = 1; i <= 3; i++) {
+  const y = PAD + (i/4)*(H-PAD*2);
+  grid += `<line x1="${PAD}" y1="${y}" x2="${W-PAD}" y2="${y}" stroke="var(--border)" stroke-width="1"/>`;
+}
+svg.innerHTML = defs + grid +
+  `<path d="${area}" fill="url(#sg)"/>` +
+  `<polyline points="${pts}" fill="none" stroke="#256644" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>` +
+  `<circle cx="${toX(vals.length-1)}" cy="${toY(vals[vals.length-1])}" r="4" fill="#256644"/>`;
+
+document.getElementById('spark-labels').innerHTML = weeks.map(w => `<span>${w}</span>`).join('');
+
+// ── Zakat calculator ──────────────────────────────────────
+function calcZakat() {
+  const assets = parseFloat(document.getElementById('zakat-assets').value) || 0;
+  const liab   = parseFloat(document.getElementById('zakat-liab').value) || 0;
+  const wealth = Math.max(0, assets - liab);
+  const due    = wealth * 0.025;
+  document.getElementById('zakat-result').textContent = '$' + due.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('zakat-wealth').textContent  = '$' + wealth.toLocaleString('en-US');
+}
+
+// ── View switcher ─────────────────────────────────────────
+const TITLES = {
+  dashboard:'Dashboard', donors:'Donors', donations:'Donations',
+  campaigns:'Campaigns', zakat:'Zakat', prayer:'Prayer Times', school:'School & Maktab'
+};
+function switchView(id, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('topbar-title').textContent = TITLES[id] || id;
+}
+</script>
